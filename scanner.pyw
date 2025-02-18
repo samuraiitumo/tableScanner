@@ -482,6 +482,26 @@ class TrayIcon(QSystemTrayIcon):
         self.setContextMenu(menu)
 
     def takeScreenshot(self):
+        # 关闭所有已经存在的识别结果窗口
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, QDialog):  # 确保是QDialog类型的窗口
+                title = widget.windowTitle()
+                if title in ["表格识别结果", "识别结果"]:  # 根据窗口标题来判断
+                    # 获取布局并删除所有控件
+                    layout = widget.layout()
+                    if layout:
+                        for i in range(layout.count()):
+                            child_widget = layout.itemAt(i).widget()
+                            if child_widget:
+                                child_widget.deleteLater()  # 删除子控件
+                    widget.close()
+                    widget.deleteLater()  # 销毁窗口本身
+
+                    # 强制隐藏该窗口，确保窗口彻底消失
+                    widget.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, False)  # 禁用透明绘制
+                    widget.hide()  # 隐藏窗口
+
+        # 创建新的截图窗口
         self.screenshot_widget = ScreenshotWidget()
 
     def create_square_icon(self):
